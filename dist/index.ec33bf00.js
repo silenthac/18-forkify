@@ -622,7 +622,7 @@ const controlSearchResults = async function() {
         (0, _resultsViewJsDefault.default).renderSpinner();
         //2)Load search result
         await _modelJs.loadSearchResult(query);
-        (0, _resultsViewJsDefault.default).render(_modelJs.getSearchResult(1));
+        (0, _resultsViewJsDefault.default).render(_modelJs.getSearchResult());
         (0, _paginationViewJsDefault.default).render(_modelJs.state.search);
     } catch (err) {
         console.log(err);
@@ -646,11 +646,12 @@ const controlAddBookmark = function() {
     (0, _bookmarkViewJsDefault.default).render(_modelJs.state.bookMarks);
 };
 // showRecipe();
-const controlAddRecipe = async function(Recipe) {
+const controlAddRecipe = async function(newRecipe) {
     try {
-        await _modelJs.uploadRecipe(Recipe);
+        await _modelJs.uploadRecipe(newRecipe);
         (0, _recipeViewJsDefault.default).render(_modelJs.state.recipe);
         (0, _addRecipeViewJsDefault.default).rendermessage();
+        (0, _bookmarkViewJsDefault.default).render(_modelJs.state.bookMarks);
         // Change ID in URL
         window.history.pushState(null, "", `#${_modelJs.state.recipe.id}`);
         setTimeout(function() {
@@ -668,6 +669,7 @@ const init = function() {
     (0, _paginationViewJsDefault.default).addHandlerCLick(constrolPagination);
     (0, _recipeViewJsDefault.default).addHandlerAddBookmark(controlAddBookmark);
     (0, _addRecipeViewJsDefault.default).addHandlerUpload(controlAddRecipe);
+    (0, _bookmarkViewJsDefault.default).addHandlerUpload(controlAddRecipe);
 };
 init(); // window.addEventListener('hashchange', showRecipe);
  // window.addEventListener('load', showRecipe);
@@ -718,7 +720,7 @@ const createRecipeObject = function(data) {
 };
 const loadRecipe = async function(id) {
     try {
-        const data = await (0, _helpers.getJSON)(`${(0, _config.API_URL)}${id}`);
+        const data = await (0, _helpers.AJAX)(`${(0, _config.API_URL)}${id}`);
         state.recipe = createRecipeObject(data);
         console.log(data);
         if (state.bookMarks.some((bookmark)=>bookmark.id === id)) state.recipe.bookmarked = true;
@@ -728,7 +730,7 @@ const loadRecipe = async function(id) {
     }
 };
 const loadSearchResult = async function(query) {
-    const data = await (0, _helpers.getJSON)(`${(0, _config.API_URL)}?search=${query}`);
+    const data = await (0, _helpers.AJAX)(`${(0, _config.API_URL)}?search=${query}&key=${(0, _config.KEY)}`);
     state.search.query = query;
     // console.log(data);
     state.search.results = data.data.recipes.map((recipe)=>{
@@ -736,7 +738,10 @@ const loadSearchResult = async function(query) {
             id: recipe.id,
             title: recipe.title,
             publisher: recipe.publisher,
-            image: recipe.image_url
+            image: recipe.image_url,
+            ...recipe.key && {
+                key: recipe.key
+            }
         };
     });
     state.search.page = 1;
@@ -767,7 +772,7 @@ const uploadRecipe = async function(newRecipe) {
     try {
         const ingredients = Object.entries(newRecipe).filter((entry)=>entry[0].startsWith("ingredient") && entry[1] !== "").map((ing)=>{
             const ingArr = ing[1].split(",").map((el)=>el.trim());
-            if (ingArr.length !== 3) throw new Error("Wrong ingredient fromat! Please use the correct format :)");
+            if (ingArr.length !== 3) throw new Error("Wrong ingredient format! Please use the correct format :)");
             const [quantity, unit, description] = ingArr;
             return {
                 quantity: quantity ? +quantity : null,
@@ -785,6 +790,7 @@ const uploadRecipe = async function(newRecipe) {
             ingredients
         };
         const data = await (0, _helpers.AJAX)(`${(0, _config.API_URL)}?key=${(0, _config.KEY)}`, recipe);
+        console.log(data);
         state.recipe = await createRecipeObject(data);
         addBookmark(state.recipe);
     } catch (err) {
@@ -854,6 +860,7 @@ const getJSON = async function(url) {
             timeout((0, _config.TIMEOUT_SEC))
         ]);
         const data = await res.json();
+        console.log(data);
         if (!res.ok) throw new Error(`${data.message} (${res.status})`);
         return data;
     } catch (err) {
@@ -862,6 +869,7 @@ const getJSON = async function(url) {
 };
 const AJAX = async function(url, uploadData) {
     try {
+        console.log("data", uploadData);
         const fetchPro = uploadData ? fetch(url, {
             method: "POST",
             headers: {

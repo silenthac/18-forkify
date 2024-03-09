@@ -1,5 +1,5 @@
 import { API_URL } from './config';
-import { getJSON } from './helpers';
+import { AJAX } from './helpers';
 import recipeView from './views/recipeView';
 import { RES_PER_PAGE } from './config';
 import { AJAX } from './helpers';
@@ -35,7 +35,7 @@ const createRecipeObject = function (data) {
 
 export const loadRecipe = async function (id) {
   try {
-    const data = await getJSON(`${API_URL}${id}`);
+    const data = await AJAX(`${API_URL}${id}`);
     state.recipe = createRecipeObject(data);
     console.log(data);
 
@@ -50,7 +50,7 @@ export const loadRecipe = async function (id) {
 };
 
 export const loadSearchResult = async function (query) {
-  const data = await getJSON(`${API_URL}?search=${query}`);
+  const data = await AJAX(`${API_URL}?search=${query}&key=${KEY}`);
   state.search.query = query;
   // console.log(data);
   state.search.results = data.data.recipes.map(recipe => {
@@ -59,6 +59,7 @@ export const loadSearchResult = async function (query) {
       title: recipe.title,
       publisher: recipe.publisher,
       image: recipe.image_url,
+      ...(recipe.key && { key: recipe.key }),
     };
   });
   state.search.page = 1;
@@ -105,7 +106,7 @@ export const uploadRecipe = async function (newRecipe) {
         const ingArr = ing[1].split(',').map(el => el.trim());
         if (ingArr.length !== 3)
           throw new Error(
-            'Wrong ingredient fromat! Please use the correct format :)'
+            'Wrong ingredient format! Please use the correct format :)'
           );
 
         const [quantity, unit, description] = ingArr;
@@ -124,6 +125,7 @@ export const uploadRecipe = async function (newRecipe) {
     };
 
     const data = await AJAX(`${API_URL}?key=${KEY}`, recipe);
+    console.log(data);
     state.recipe = await createRecipeObject(data);
     addBookmark(state.recipe);
   } catch (err) {
