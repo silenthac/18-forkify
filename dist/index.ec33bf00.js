@@ -669,7 +669,7 @@ const init = function() {
     (0, _paginationViewJsDefault.default).addHandlerCLick(constrolPagination);
     (0, _recipeViewJsDefault.default).addHandlerAddBookmark(controlAddBookmark);
     (0, _addRecipeViewJsDefault.default).addHandlerUpload(controlAddRecipe);
-    (0, _bookmarkViewJsDefault.default).addHandlerUpload(controlAddRecipe);
+//bookmarkView.addHandlerUpload(controlAddRecipe);
 };
 init(); // window.addEventListener('hashchange', showRecipe);
  // window.addEventListener('load', showRecipe);

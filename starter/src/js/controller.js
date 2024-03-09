@@ -100,7 +100,7 @@ const init = function () {
   paginationView.addHandlerCLick(constrolPagination);
   recipeView.addHandlerAddBookmark(controlAddBookmark);
   addRecipeView.addHandlerUpload(controlAddRecipe);
-  bookmarkView.addHandlerUpload(controlAddRecipe);
+  //bookmarkView.addHandlerUpload(controlAddRecipe);
 };
 
 init();
